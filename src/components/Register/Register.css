@@ -1,0 +1,40 @@
+/* /Users/edimaevinawilfriedbryan/Desktop/JETA/jeta-react-app/src/components/Register/Register.css */
+/* :host n'est pas utilisé en React de la même manière qu'en Angular.
+   Vous pouvez le supprimer ou le commenter. */
+
+/* .bg-page-bg {
+  background-color: #E0F7FA; 
+}
+
+.text-primary {
+  color: #4FC3F7;
+} */
+/* Ces classes ci-dessus sont gérées par Tailwind directement dans le JSX.
+   Vous ne devriez pas avoir besoin de les redéfinir ici, sauf si vous voulez
+   outrepasser Tailwind pour une raison spécifique pour CE composant uniquement. */
+
+/* input {
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+input:focus {
+  border-color: #4FC3F7; 
+} */
+/* Ces styles d'input sont aussi gérables via Tailwind (focus:ring-primary, focus:border-primary) */
+
+/* button:hover {
+  transform: scale(1.02);
+} */
+/* Géré par Tailwind (hover:scale-102 ou classes de transition) */
+
+/* L'ID a été changé dans le JSX pour être plus spécifique à React et éviter les conflits.
+   Si vous avez besoin de styles spécifiques pour le conteneur reCAPTCHA que Tailwind ne peut pas gérer facilement : */
+   #recaptcha-container-react { /* Assurez-vous que cet ID correspond à celui dans votre JSX */
+    margin-top: 1rem;
+    /* Ajoutez d'autres styles spécifiques ici si Tailwind ne suffit pas */
+    /* Par exemple, si vous voulez forcer des dimensions spécifiques qui ne sont pas bien gérées par min-h/min-w */
+    /* width: 304px; */
+    /* height: 78px; */
+  }
+  

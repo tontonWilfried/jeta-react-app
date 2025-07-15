@@ -1,0 +1,145 @@
+#root {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* Styles pour les tutoriels Joyride */
+.joyride-active {
+  /* Styles appliqués au body quand le tutoriel est actif */
+}
+
+.joyride-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Amélioration de la visibilité des boutons pendant le tutoriel */
+.start-button-step {
+  position: relative;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(79, 195, 247, 0.4);
+  border: 2px solid #4FC3F7;
+  animation: pulse-highlight 2s infinite;
+}
+
+.login-submit-button-step,
+.register-submit-button-step {
+  position: relative;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(79, 195, 247, 0.4);
+  border: 2px solid #4FC3F7;
+}
+
+@keyframes pulse-highlight {
+  0% {
+    box-shadow: 0 4px 20px rgba(79, 195, 247, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 6px 25px rgba(79, 195, 247, 0.7);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 4px 20px rgba(79, 195, 247, 0.4);
+    transform: scale(1);
+  }
+}
+
+/* Mise en évidence des éléments pendant le tutoriel */
+.__joyride-step--focused {
+  position: relative;
+  z-index: 1001;
+}
+
+/* Styles pour les animations de la page d'accueil */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation-name: fadeInUp;
+  animation-duration: 1s;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease;
+}
+
+/* Assurer que les éléments animés sont initialement invisibles */
+.animate-fadeInUp {
+  opacity: 0;
+}
+
+/* Améliorer la visibilité des étapes de tutoriel sur les cartes du dashboard */
+.dashboard-orders-card-step,
+.dashboard-popular-items-card-step,
+.dashboard-profile-card-step,
+.dashboard-manage-brocante-card-step,
+.dashboard-brocante-live-card-step,
+.dashboard-cart-card-step,
+.dashboard-order-tracking-card-step,
+.dashboard-notifications-card-step,
+.dashboard-offline-catalog-card-step,
+.dashboard-chat-card-step,
+.dashboard-loyalty-card-step,
+.dashboard-map-card-step,
+.dashboard-promotions-card-step,
+.dashboard-featured-sellers-card-step,
+.dashboard-settings-card-step,
+.dashboard-help-info-card-step,
+.dashboard-newsletter-card-step {
+  transition: all 0.3s ease;
+}
+
+/* Améliorer la visibilité des éléments du header pendant le tutoriel */
+.header-logo-step,
+.header-search-bar-step,
+.header-profile-link-step,
+.header-cart-link-step,
+.header-logout-button-step {
+  position: relative;
+  z-index: 1000;
+}

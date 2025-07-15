@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contrat Vendeur - JETA Marketplace</title>
+  <style>
+    body { font-family: 'Poppins', Arial, sans-serif; background: #f6fafd; color: #222; margin: 0; padding: 0; }
+    .container { max-width: 800px; margin: 40px auto; background: #fff; border-radius: 18px; box-shadow: 0 4px 24px #0001; padding: 40px 32px; }
+    h1, h2, h3 { color: #4FC3F7; margin-top: 1.5em; }
+    h1 { text-align: center; margin-bottom: 0.5em; }
+    .logo { display: flex; align-items: center; justify-content: center; margin-bottom: 2em; }
+    .logo span { font-size: 2.5em; color: #4FC3F7; font-weight: bold; margin-right: 0.5em; }
+    ul, ol { margin-left: 1.5em; }
+    .signature { margin-top: 3em; text-align: right; color: #888; font-size: 1em; }
+    .accept { margin-top: 2em; background: #e3f3fa; border-left: 4px solid #4FC3F7; padding: 1em 1.5em; border-radius: 10px; color: #1976d2; font-weight: 500; }
+    .footer { margin-top: 3em; text-align: center; color: #aaa; font-size: 0.95em; }
+    @media (max-width: 600px) { .container { padding: 16px 4px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo" style="justify-content:center;">
+      <span style="font-size:2.8em; color:#4FC3F7; font-weight:800; letter-spacing:0.05em; font-family:'Poppins',Arial,sans-serif;">JETA</span>
+    </div>
+    <h1>Contrat Vendeur</h1>
+    <p><strong>Date :</strong> <span id="date"></span></p>
+    <h2>1. Objet du contrat</h2>
+    <p>Le présent contrat a pour objet de définir les conditions dans lesquelles le vendeur utilise la plateforme JETA Marketplace pour proposer, vendre et livrer ses produits aux acheteurs.</p>
+    <h2>2. Obligations du vendeur</h2>
+    <ul>
+      <li>Fournir des informations exactes, complètes et à jour sur les produits proposés.</li>
+      <li>Garantir la conformité, la qualité et la légalité des produits mis en vente.</li>
+      <li>Respecter les délais de livraison annoncés et assurer un service client réactif.</li>
+      <li>Respecter la législation en vigueur (propriété intellectuelle, sécurité, fiscalité, etc.).</li>
+      <li>Ne pas proposer de produits interdits ou dangereux.</li>
+      <li>Gérer les retours et réclamations de bonne foi.</li>
+    </ul>
+    <h2>3. Obligations de la plateforme JETA</h2>
+    <ul>
+      <li>Mettre à disposition un espace de vente sécurisé et accessible.</li>
+      <li>Assurer la visibilité des produits du vendeur auprès des acheteurs.</li>
+      <li>Gérer les paiements et reverser les fonds au vendeur selon les modalités prévues.</li>
+      <li>Fournir un support en cas de litige ou de problème technique.</li>
+    </ul>
+    <h2>4. Modalités de paiement</h2>
+    <ul>
+      <li>La plateforme prélève une commission de 10% sur chaque vente réalisée (sauf mention contraire).</li>
+      <li>Les paiements au vendeur sont effectués sous 7 jours ouvrés après validation de la commande.</li>
+      <li>Le vendeur doit fournir des coordonnées bancaires valides pour recevoir ses paiements.</li>
+    </ul>
+    <h2>5. Gestion des litiges et retours</h2>
+    <ul>
+      <li>En cas de litige, la plateforme agit en médiateur et peut suspendre le compte vendeur si nécessaire.</li>
+      <li>Le vendeur s'engage à traiter les retours et remboursements dans un délai de 7 jours.</li>
+      <li>Les produits non conformes ou défectueux doivent être remboursés ou remplacés.</li>
+    </ul>
+    <h2>6. Protection des données</h2>
+    <p>Les données personnelles du vendeur sont traitées conformément à la politique de confidentialité de JETA Marketplace et à la réglementation en vigueur (RGPD).</p>
+    <h2>7. Résiliation</h2>
+    <ul>
+      <li>Le vendeur peut résilier son contrat à tout moment via son espace personnel.</li>
+      <li>La plateforme se réserve le droit de suspendre ou résilier le compte en cas de manquement grave.</li>
+    </ul>
+    <h2>8. Acceptation et signature électronique</h2>
+    <p>En cochant la case d'acceptation lors de la demande pour devenir vendeur, le vendeur reconnaît avoir lu, compris et accepté l'intégralité du présent contrat. Cette acceptation a valeur de signature électronique.</p>
+    <div class="accept">
+      <strong>J'accepte le présent contrat vendeur et m'engage à respecter ses conditions.</strong>
+    </div>
+    <div class="signature">
+      <p>Fait à Yaoundé, le <span id="date2"></span></p>
+      <p>Signature électronique du vendeur : <em>(case cochée sur la plateforme)</em></p>
+    </div>
+    <div class="footer">
+      JETA Marketplace &copy; 2024 — Tous droits réservés.<br>
+      Pour toute question : support@jeta-marketplace.com
+    </div>
+  </div>
+  <script>
+    // Affiche la date du jour automatiquement
+    const today = new Date().toLocaleDateString('fr-FR');
+    document.getElementById('date').textContent = today;
+    document.getElementById('date2').textContent = today;
+  </script>
+</body>
+</html> 

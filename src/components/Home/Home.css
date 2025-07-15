@@ -1,0 +1,238 @@
+/* Styles pour l'effet machine à écrire */
+.typewriter {
+  display: block; /* Pour permettre margin: auto */
+  width: fit-content; /* S'adapte au contenu */
+  overflow: hidden; /* Cache le texte non encore "tapé" */
+  border-right: .15em solid #4FC3F7; /* Curseur (couleur primaire) */
+  white-space: nowrap; /* Empêche le retour à la ligne */
+  margin-left: auto;
+  margin-right: auto;
+  letter-spacing: .1em;
+  /* Pour "Le Gestionnaire D'achats." (27 caractères) */
+  animation: typing-slogan 2.5s steps(27, end) forwards,
+             blink-slogan-caret 0.6s steps(2, start) 4 forwards; /* 4 cycles * 0.6s = 2.4s, ce qui couvre la durée de frappe */
+}
+
+/* Animation de frappe pour le slogan */
+@keyframes typing-slogan {
+  from { width: 0; }
+  to { width: 100%; } /* S'assure que tout le texte est visible */
+}
+
+/* Animation du curseur clignotant pour le slogan */
+@keyframes blink-slogan-caret {
+  0%, 100% { border-color: transparent; } /* État "off" du curseur */
+  50% { border-color: #4FC3F7; }   /* État "on" du curseur (votre couleur primaire) */
+}
+
+/* === CORRECTIONS POUR LES PROBLÈMES D'ALIGNEMENT === */
+
+/* Styles spécifiques pour le Dashboard */
+.dashboard-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.dashboard-card h2 {
+  min-height: 2.5rem; /* Assure une hauteur minimale pour l'alignement des titres */
+}
+
+.dashboard-card p {
+  flex-grow: 1; /* Permet au paragraphe de prendre l'espace disponible */
+}
+
+/* Amélioration de l'animation fadeInUp pour le dashboard */
+@keyframes fadeInUpDashboard {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-welcome-message-step {
+  animation: fadeInUpDashboard 0.8s ease-out forwards;
+}
+
+/* Corrections pour l'alignement des éléments du header */
+.header-nav-items {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Assurer que les tooltips du tutoriel s'alignent correctement */
+.joyride-tooltip {
+  z-index: 10000 !important;
+}
+
+/* Correction pour les cartes qui ne s'alignent pas bien */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+/* Style pour les cartes qui ont des hauteurs différentes */
+.dashboard-card-equal-height {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Corrections spécifiques pour les problèmes d'alignement Header + Dashboard */
+.header-container {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 1rem;
+}
+
+.header-logo {
+  flex-shrink: 0;
+}
+
+.header-search {
+  flex-grow: 1;
+  max-width: 600px;
+  margin: 0 1rem;
+}
+
+.header-nav {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Correction pour que les tooltips du tutoriel ne cassent pas la mise en page */
+.__floater {
+  z-index: 10001 !important;
+}
+
+/* Assurer que le contenu principal ne soit pas masqué par le header sticky */
+.main-content-with-header {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Correction de l'alignement pour les éléments flexbox dans les cartes */
+.card-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.card-header {
+  flex-shrink: 0;
+}
+
+.card-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-footer {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+/* === AMÉLIORATIONS SPÉCIFIQUES POUR LE TUTORIEL === */
+
+/* Assurer que les éléments du tutoriel restent visibles */
+.joyride-tooltip {
+  z-index: 10001 !important;
+  position: fixed !important;
+  max-width: 350px !important;
+}
+
+/* Garder seulement le style minimal pour que le tooltip soit au-dessus du header */
+.react-joyride__tooltip {
+  z-index: 10001 !important; /* Au-dessus du header */
+}
+
+/* Correction du z-index pour le header quand le tutoriel est actif */
+body.joyride-active .header-container {
+  z-index: 10000 !important;
+}
+
+/* Assurer que le contenu scrolle correctement pendant le tutoriel */
+body.joyride-active {
+  scroll-behavior: smooth;
+}
+
+/* Style spécial pour les éléments ciblés par le tutoriel */
+.joyride-target {
+  position: relative;
+  z-index: 1;
+}
+
+/* Améliorer la visibilité des éléments pendant le tutoriel */
+.react-joyride__target {
+  outline: none !important;
+}
+
+/* Marge de sécurité pour les éléments près du header */
+.dashboard-welcome-message-step {
+  scroll-margin-top: 140px; /* Marge pour éviter le header sticky */
+}
+
+.dashboard-orders-card-step,
+.dashboard-manage-brocante-card-step,
+.dashboard-cart-card-step,
+.dashboard-profile-card-step,
+.dashboard-notifications-card-step,
+.dashboard-chat-card-step,
+.dashboard-settings-card-step,
+.dashboard-loyalty-card-step,
+.dashboard-map-card-step,
+.dashboard-offline-catalog-card-step,
+.dashboard-promotions-card-step {
+  scroll-margin-top: 120px; /* Marge pour éviter le header sticky */
+}
+
+/* Style pour les éléments du header dans le tutoriel */
+.header-logo-step,
+.header-search-bar-step,
+.header-profile-link-step,
+.header-cart-link-step,
+.header-logout-button-step,
+.header-dashboard-link-step,
+.header-notifications-link-step {
+  scroll-margin-top: 20px;
+  position: relative;
+  z-index: 51; /* Juste au-dessus du header */
+}
+
+/* Animation smooth pour le scroll pendant le tutoriel */
+html.joyride-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Correctif pour les tooltips qui sortent de l'écran */
+.react-joyride__tooltip {
+  max-width: min(350px, 90vw) !important;
+  margin: 10px !important;
+}
+
+/* Assurer que le beacon (point clignotant) est visible */
+.react-joyride__beacon {
+  z-index: 10002 !important;
+}
