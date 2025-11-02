@@ -3,11 +3,14 @@ import { useSellerCart } from '../contexts/SellerCartContext';
 import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import { FiShoppingBag } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiArrowLeft } from 'react-icons/fi';
 
 export default function SellerCart() {
   const { cart, removeFromSellerCart, updateQuantity, toggleChecked, setResalePrice, total, totalResale, clearSellerCart } = useSellerCart();
   const { currentUser, userData } = useAuth();
   const displayName = userData?.displayName || userData?.name || currentUser?.displayName || currentUser?.name || currentUser?.email || 'Vendeur';
+  const navigate = useNavigate();
 
   // Filtre : tous, achetés, non achetés
   const [filter, setFilter] = useState('all');
@@ -36,7 +39,15 @@ export default function SellerCart() {
   const paginatedCart = filteredCart.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="min-h-screen bg-white text-text-main p-4">
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       <div className="flex flex-col items-center justify-center mb-10 animate-fadeInUp pt-8">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-dark drop-shadow-lg flex items-center gap-3 mb-2" style={{paddingBottom: '0.3em', marginBottom: '0.5em'}}>
           <span className="animate-bounce"><FiShoppingBag className="inline-block text-primary-dark" size={44} /></span>

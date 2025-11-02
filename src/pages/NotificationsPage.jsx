@@ -5,6 +5,7 @@ import { firestore } from '../firebaseConfig';
 import { collection, query, where, onSnapshot, doc, getDoc, orderBy, updateDoc, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useDiscussionSelection } from '../contexts/DiscussionSelectionContext';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const NotificationsPage = () => {
   const { currentUser } = useAuth();
@@ -18,7 +19,7 @@ const NotificationsPage = () => {
 
   // DEBUG : log currentUser à chaque rendu
   console.log('[DEBUG][NotificationsPage] Render | currentUser:', currentUser);
-  console.log('[DEBUG][NotificationsPage] supportNotifs:', supportNotifs);
+  console.log('[DEBUG][NotificationsPage] notifications:', notifications);
   console.log('[DEBUG][NotificationsPage] userRole:', userRole);
 
   useEffect(() => {
@@ -33,174 +34,96 @@ const NotificationsPage = () => {
     setLoading(true);
     const unsubscribes = [];
 
-    // Écouter tous les chats où l'utilisateur est concerné
-    const chatsRef = collection(firestore, 'clientSellerChats');
-    const unsubChats = onSnapshot(chatsRef, (chatsSnap) => {
-      const chatIds = chatsSnap.docs.map(doc => doc.id).filter(chatId => chatId.includes(currentUser.uid));
-      
-      if (chatIds.length === 0) {
-        setNotifications([]);
-        setLoading(false); // <-- déjà présent
-        return;
-      }
-
-      unsubscribes.forEach(unsub => unsub());
-      unsubscribes.length = 0;
-
-      let chatsProcessed = 0;
-      if (chatIds.length === 0) {
+    // Fonction simplifiée pour écouter les messages non lus
+    const listenToUnreadMessages = async () => {
+      try {
+        // Récupérer tous les chats où l'utilisateur est concerné
+        const chatsRef = collection(firestore, 'clientSellerChats');
+        const chatsSnap = await getDocs(chatsRef);
+        const userChats = chatsSnap.docs.filter(doc => doc.id.includes(currentUser.uid));
+        
+        console.log('[DEBUG][NotificationsPage] Found user chats:', userChats.map(doc => doc.id));
+        
+        // Si aucun chat n'est trouvé, chercher dans tous les chats possibles
+        let allChats = userChats;
+        if (userChats.length === 0) {
+          console.log('[DEBUG][NotificationsPage] Aucun chat trouvé, recherche dans tous les chats...');
+          allChats = chatsSnap.docs;
+        }
+        
+        // Pour chaque chat, écouter les messages non lus
+        const chatUnsubscribes = [];
+        const chatNotifications = [];
+        
+        for (const chatDoc of allChats) {
+          const chatId = chatDoc.id;
+          const msgsRef = collection(firestore, 'clientSellerChats', chatId, 'messages');
+          const q = query(msgsRef, where('read', '==', false));
+          
+          const unsub = onSnapshot(q, async (msgsSnap) => {
+            const unreadMessages = msgsSnap.docs.filter(doc => {
+              const msg = doc.data();
+              return msg.senderUid !== currentUser.uid; // Seulement les messages reçus
+            });
+            
+            console.log(`[DEBUG][NotificationsPage] Chat ${chatId}: ${unreadMessages.length} messages non lus`);
+            
+            if (unreadMessages.length > 0) {
+              // Créer des notifications pour chaque message non lu
+              for (const msgDoc of unreadMessages) {
+                const msg = msgDoc.data();
+                
+                // Récupérer le nom de l'expéditeur
+                let senderName = 'Utilisateur';
+                try {
+                  const userDoc = await getDoc(doc(firestore, 'users', msg.senderUid));
+                  if (userDoc.exists()) {
+                    senderName = userDoc.data().displayName || userDoc.data().name || userDoc.data().email || 'Utilisateur';
+                  }
+                } catch (error) {
+                  console.error('Erreur lors de la récupération du nom:', error);
+                }
+                
+                const notification = {
+                  id: msgDoc.id,
+                  type: 'message',
+                  title: `${senderName} vous a écrit`,
+                  message: msg.text,
+                  timestamp: msg.createdAt,
+                  chatId: chatId,
+                  senderUid: msg.senderUid,
+                  senderName: senderName
+                };
+                
+                chatNotifications.push(notification);
+              }
+              
+              // Mettre à jour les notifications
+              setNotifications(prev => {
+                const filtered = prev.filter(n => n.chatId !== chatId);
+                return [...filtered, ...chatNotifications];
+              });
+            }
+          });
+          
+          chatUnsubscribes.push(unsub);
+        }
+        
+        // Nettoyage
+        return () => {
+          chatUnsubscribes.forEach(unsub => unsub());
+        };
+      } catch (error) {
+        console.error('[ERROR][NotificationsPage] Erreur lors de l\'écoute des messages:', error);
         setLoading(false);
       }
-      chatIds.forEach(chatId => {
-        const msgsRef = collection(firestore, 'clientSellerChats', chatId, 'messages');
-        const q = query(msgsRef, where('read', '==', false), orderBy('createdAt', 'desc'));
-        const unsubMsgs = onSnapshot(q, async (msgsSnap) => {
-          const unreadMessages = msgsSnap.docs.filter(doc => doc.data().senderUid !== currentUser.uid);
-          if (unreadMessages.length === 0) {
-            setNotifications(prev => {
-              const updated = prev.map(n =>
-                n.chatId === chatId ? { ...n, hasUnread: false, unreadCount: 0 } : n
-              );
-              return updated.sort((a, b) =>
-                (b.createdAt?.getTime?.() || 0) - (a.createdAt?.getTime?.() || 0)
-              );
-            });
-            chatsProcessed++;
-            if (chatsProcessed === chatIds.length) setLoading(false);
-            return;
-          }
-
-          // Récupérer les infos des messages non lus
-          const notifs = await Promise.all(unreadMessages.map(async (docSnap) => {
-            const msg = docSnap.data();
-            let senderName = 'Utilisateur';
-            try {
-              const userDoc = await getDoc(doc(firestore, 'users', msg.senderUid));
-              if (userDoc.exists()) {
-                senderName = userDoc.data().displayName || userDoc.data().name || userDoc.data().email || 'Utilisateur';
-              }
-            } catch (error) {
-              console.error('Erreur récupération utilisateur:', error);
-            }
-            const parts = chatId.split('_');
-            const otherUid = parts.find(uid => uid !== currentUser.uid);
-            return {
-              id: docSnap.id,
-              chatId,
-              text: msg.text,
-              senderName,
-              senderUid: msg.senderUid,
-              createdAt: msg.createdAt?.toDate ? msg.createdAt.toDate() : null,
-              otherUid,
-            };
-          }));
-
-          setNotifications(prev => {
-            const filtered = prev.filter(n => n.chatId !== chatId);
-            return [...filtered, ...notifs].sort((a, b) => 
-              (b.createdAt?.getTime?.() || 0) - (a.createdAt?.getTime?.() || 0)
-            );
-          });
-          chatsProcessed++;
-          if (chatsProcessed === chatIds.length) setLoading(false);
-        });
-        unsubscribes.push(unsubMsgs);
-      });
-      // Si aucun chat, loading doit passer à false
-      if (chatIds.length === 0) setLoading(false);
-    });
-
-    // --- SUPPORT ADMIN : écoute temps réel sur tous les fils support_chats ---
-    let supportUnsubs = [];
-    const listenSupportNotifs = async () => {
-      // Vérifier si admin
-      const userDoc = await getDoc(doc(firestore, 'users', currentUser.uid));
-      console.log('[DEBUG][NotificationsPage] Checking user role for support notifications. User exists:', userDoc.exists(), 'Role:', userDoc.exists() ? userDoc.data().role : 'N/A');
-      if (!userDoc.exists() || userDoc.data().role !== 'admin') {
-        console.log('[DEBUG][NotificationsPage] User is not admin, skipping support notifications');
-        return;
-      }
-      console.log('[DEBUG][NotificationsPage] User is admin, setting up support notifications listeners');
-      // Charger tous les fils support
-      const chatsSnap = await getDocs(collection(firestore, 'support_chats'));
-      const userIds = chatsSnap.docs.map(doc => doc.id);
-      console.log('[DEBUG][NotificationsPage] userIds support_chats:', userIds);
-      if (userIds.length === 0) {
-        setSupportNotifs([]);
-        setLoading(false); // <-- AJOUT : loading false si aucun support
-        return;
-      }
-      // Pour chaque fil, écouter les messages non lus
-      userIds.forEach(userId => {
-        const msgsRef = collection(firestore, 'support_chats', userId, 'messages');
-        const q = query(msgsRef, where('sender', '!=', 'support'), where('read', '==', false), orderBy('createdAt', 'desc'));
-        try {
-          const unsub = onSnapshot(q, async (msgsSnap) => {
-            console.log('[DEBUG][NotificationsPage] supportNotifs snapshot for userId:', userId, '| docs:', msgsSnap.docs.length, '| empty:', msgsSnap.empty);
-            if (!msgsSnap.empty) {
-              msgsSnap.docs.forEach(docSnap => {
-                const msg = docSnap.data();
-                console.log('[DEBUG][NotificationsPage] Message:', { id: docSnap.id, ...msg });
-              });
-            } else {
-              console.log('[DEBUG][NotificationsPage] Aucun message non lu trouvé pour userId:', userId);
-            }
-            if (msgsSnap.empty) {
-              setSupportNotifs(prev => prev.filter(n => n.userId !== userId));
-              return;
-            }
-            // Récupérer infos utilisateur
-            let userName = 'Utilisateur';
-            try {
-              const userDoc = await getDoc(doc(firestore, 'users', userId));
-              if (userDoc.exists()) {
-                userName = userDoc.data().displayName || userDoc.data().name || userDoc.data().email || 'Utilisateur';
-              }
-            } catch {}
-            // Regrouper tous les messages non lus
-            const messages = msgsSnap.docs.map(docSnap => {
-              const msg = docSnap.data();
-              return {
-                id: docSnap.id,
-                text: msg.text,
-                createdAt: msg.createdAt?.toDate ? msg.createdAt.toDate() : null,
-              };
-            });
-            // Trier les messages du plus récent au plus ancien
-            messages.sort((a, b) => (b.createdAt?.getTime?.() || 0) - (a.createdAt?.getTime?.() || 0));
-            // Mettre à jour la notif pour cet userId
-            setSupportNotifs(prev => {
-              const filtered = prev.filter(n => n.userId !== userId);
-              return [
-                ...filtered,
-                {
-                  userId,
-                  userName,
-                  count: messages.length,
-                  lastMsg: messages[0],
-                  messages,
-                },
-              ].sort((a, b) => (b.lastMsg?.createdAt?.getTime?.() || 0) - (a.lastMsg?.createdAt?.getTime?.() || 0));
-            });
-          });
-          supportUnsubs.push(unsub);
-        } catch (err) {
-          console.error('[DEBUG][NotificationsPage] Firestore onSnapshot error for userId:', userId, err);
-        }
-      });
-      // Ajout d'un fallback debug après 2s
-      setTimeout(() => {
-        if (supportNotifs.length === 0) {
-          console.log('[DEBUG][NotificationsPage] Fallback: Aucun supportNotifs détecté après 2s. currentUser:', currentUser.uid, '| role:', userDoc.data().role, '| supportNotifs.length:', supportNotifs.length);
-        }
-      }, 2000);
     };
-    listenSupportNotifs();
 
-    unsubscribes.push(unsubChats);
+    listenToUnreadMessages();
+
+    // Nettoyage
     return () => {
       unsubscribes.forEach(unsub => unsub());
-      supportUnsubs.forEach(unsub => unsub());
     };
   }, [currentUser]);
 
@@ -275,7 +198,15 @@ const NotificationsPage = () => {
   }
 
   return (
-    <div className="bg-page-bg text-main min-h-screen">
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white shadow-xl rounded-lg p-6 md:p-10">
           <h1 className="text-3xl md:text-4xl font-bold text-primary mb-6">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSync, FaShoppingCart, FaStore, FaTags } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { FiShoppingBag, FiRefreshCw } from 'react-icons/fi';
+import { FiShoppingBag, FiRefreshCw, FiArrowLeft } from 'react-icons/fi';
 import axios from 'axios';
 import { useSellerCart } from '../contexts/SellerCartContext';
 import { toast } from 'react-toastify';
@@ -65,6 +65,15 @@ export default function ScrappingSites() {
   const [page, setPage] = useState(1);
   const PRODUCTS_PER_PAGE = 20;
 
+  // Nouveau : filtre par site
+  const [siteFilter, setSiteFilter] = useState('all');
+  // Remplacer le filtre par site par un filtre de tri
+  const [sortOrder, setSortOrder] = useState('default');
+
+  // Ajout des états pour l'auto-complétion
+  const [autoComplete, setAutoComplete] = useState([]);
+  const [showAutoComplete, setShowAutoComplete] = useState(false);
+
   useEffect(() => {
     setLoading(true);
     Promise.all([
@@ -77,18 +86,61 @@ export default function ScrappingSites() {
     });
   }, []);
 
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setAutoComplete([]);
+      setShowAutoComplete(false);
+      return;
+    }
+    const suggestions = allProducts
+      .filter(p => p.name && p.name.toLowerCase().includes(searchTerm.trim().toLowerCase()))
+      .map(p => p.name)
+      .filter((v, i, arr) => arr.indexOf(v) === i)
+      .slice(0, 8);
+    setAutoComplete(suggestions);
+    setShowAutoComplete(suggestions.length > 0);
+  }, [searchTerm, allProducts]);
+
   const { addToSellerCart, cart } = useSellerCart();
 
   // Filtrage
   const filtered = allProducts.filter(p =>
     !searchTerm.trim() || (p.name && p.name.toLowerCase().includes(searchTerm.trim().toLowerCase()))
   );
-  const totalPages = Math.ceil(filtered.length / PRODUCTS_PER_PAGE);
-  const paginated = filtered.slice((page - 1) * PRODUCTS_PER_PAGE, page * PRODUCTS_PER_PAGE);
+
+  // Appliquer le tri sur la liste filtrée
+  let sorted = [...filtered];
+  if (sortOrder === 'asc') {
+    sorted.sort((a, b) => (a.price || a.promo_price || 0) - (b.price || b.promo_price || 0));
+  } else if (sortOrder === 'desc') {
+    sorted.sort((a, b) => (b.price || b.promo_price || 0) - (a.price || a.promo_price || 0));
+  }
+  const totalPages = Math.ceil(sorted.length / PRODUCTS_PER_PAGE);
+  const paginated = sorted.slice((page - 1) * PRODUCTS_PER_PAGE, page * PRODUCTS_PER_PAGE);
 
   // Affichage
   return (
-    <div className="min-h-screen bg-[#f6fafd] py-10 px-4">
+    <div className="min-h-screen bg-[#f6fafd] py-10 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
+      {/* Panier flottant */}
+      <button
+        onClick={() => navigate('/seller-cart')}
+        className="fixed bottom-6 right-6 z-40 bg-[#4FC3F7] hover:bg-[#0288D1] text-white rounded-full shadow-lg flex items-center justify-center w-16 h-16 border-4 border-white transition-all"
+        style={{boxShadow: '0 4px 24px #4FC3F733'}}
+      >
+        <FaShoppingCart className="w-8 h-8" />
+        {cart.length > 0 && (
+          <span className="absolute -top-2 -right-2 bg-[#E91E63] text-white text-xs font-bold rounded-full px-2 py-0.5 border-2 border-white">{cart.length}</span>
+        )}
+      </button>
+      {/* Header et recherche */}
       <div className="flex flex-col items-center justify-center mb-10 animate-fadeInUp pt-8">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-dark drop-shadow-lg flex items-center gap-3 mb-2" style={{paddingBottom: '0.3em', marginBottom: '0.5em'}}>
           <span className="animate-bounce"><FiRefreshCw className="inline-block text-primary-dark" size={44} /></span>
@@ -98,21 +150,74 @@ export default function ScrappingSites() {
           Recherche dans tous les produits scrappés (Action, Carrefour, Lidl)
         </p>
       </div>
-      {/* Barre de recherche */}
-      <div className="flex justify-center mb-8">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
-          placeholder="Rechercher un produit..."
-          className="px-4 py-3 rounded-xl border-2 border-[#4FC3F7] w-full max-w-xl text-lg focus:outline-none focus:ring-2 focus:ring-[#4FC3F7]"
-        />
+      {/* Barre de recherche slim et soft + filtre de tri */}
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
+        <div style={{ position: 'relative', width: '100%', maxWidth: 320 }}>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
+            onFocus={() => setShowAutoComplete(autoComplete.length > 0)}
+            onBlur={() => setTimeout(() => setShowAutoComplete(false), 150)}
+            placeholder="Rechercher un produit..."
+            className="px-3 py-2 rounded-full border border-[#b3e5fc] w-full text-base focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] bg-white shadow-sm transition-all placeholder:text-[#90caf9]"
+            style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711'}}
+          />
+          {showAutoComplete && (
+            <div style={{
+              position: 'absolute',
+              top: 44,
+              left: 0,
+              right: 0,
+              background: '#fff',
+              border: '1px solid #b3e5fc',
+              borderTop: 'none',
+              borderRadius: '0 0 12px 12px',
+              boxShadow: '0 4px 16px #4FC3F711',
+              zIndex: 10,
+              maxHeight: 220,
+              overflowY: 'auto',
+            }}>
+              {autoComplete.map((suggestion, idx) => (
+                <div
+                  key={idx}
+                  onMouseDown={() => {
+                    setSearchTerm(suggestion);
+                    setShowAutoComplete(false);
+                  }}
+                  style={{
+                    padding: '10px 16px',
+                    cursor: 'pointer',
+                    fontSize: 15,
+                    color: '#4FC3F7',
+                    background: idx % 2 === 0 ? '#f8fafc' : '#e3eafc',
+                    borderBottom: '1px solid #e3eafc',
+                    fontWeight: 500,
+                  }}
+                >
+                  {suggestion}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <select
+          value={sortOrder}
+          onChange={e => setSortOrder(e.target.value)}
+          className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base text-[#0288D1] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] transition-all"
+          style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711'}}
+        >
+          <option value="default">Tri par défaut</option>
+          <option value="asc">Prix : du moins cher au plus cher</option>
+          <option value="desc">Prix : du plus cher au moins cher</option>
+        </select>
       </div>
+      {/* Liste des sites à scrapper (filtrée) */}
       {searchTerm.trim() === '' ? (
         <>
-          <h1 className="text-3xl font-bold text-[#4FC3F7] mb-10 text-center">Sélectionnez un site à scrapper</h1>
+          <h1 className="text-3xl font-bold text-[#4FC3F7] mb-10 text-center">Sélectionnez un site de votre choix </h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {SITES.map(site => (
+            {SITES.filter(site => siteFilter === 'all' || site.key === siteFilter).map(site => (
               <div
                 key={site.key}
                 onClick={() => navigate(site.to)}
@@ -136,7 +241,7 @@ export default function ScrappingSites() {
         </div>
       ) : (
         <>
-          {filtered.length === 0 ? (
+          {paginated.length === 0 ? (
             <div className="text-center text-gray-500 text-lg">Aucun produit trouvé.</div>
           ) : (
             <>

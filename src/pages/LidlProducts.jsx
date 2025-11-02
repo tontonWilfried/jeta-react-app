@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { FaShoppingCart } from 'react-icons/fa';
 import axios from 'axios';
+import { FiArrowLeft } from 'react-icons/fi';
 
 // Import Google Fonts dynamiquement
 const fontLink = document.createElement('link');
@@ -87,6 +88,24 @@ export default function LidlProducts() {
     filteredProducts = filteredProducts.slice().sort((a, b) => (a.price || 0) - (b.price || 0));
   } else if (priceSort === 'desc') {
     filteredProducts = filteredProducts.slice().sort((a, b) => (b.price || 0) - (a.price || 0));
+  } else {
+    // Tri par défaut : nouveaux produits en premier, puis par date de scraping décroissante
+    filteredProducts = filteredProducts.slice().sort((a, b) => {
+      // D'abord, trier par nouveauté (produits récents en premier)
+      const aIsRecent = isRecent(a.scrapedAt);
+      const bIsRecent = isRecent(b.scrapedAt);
+      
+      if (aIsRecent && !bIsRecent) return -1;
+      if (!aIsRecent && bIsRecent) return 1;
+      
+      // Ensuite, trier par date de scraping (plus récent en premier)
+      if (a.scrapedAt && b.scrapedAt) {
+        return new Date(b.scrapedAt) - new Date(a.scrapedAt);
+      }
+      
+      // Si pas de date, garder l'ordre original
+      return 0;
+    });
   }
 
   // Pagination
@@ -201,12 +220,15 @@ export default function LidlProducts() {
   if (loading) return <div style={{ fontFamily: 'Montserrat, sans-serif', textAlign: 'center', color: '#4FC3F7' }}>Chargement...</div>;
 
   return (
-    <div style={{
-      padding: 24,
-      fontFamily: 'Montserrat, sans-serif',
-      background: '#f8fafc', 
-      minHeight: '100vh'
-    }}>
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       {/* Titre centré */}
       <h1 style={{ 
         fontFamily: 'Montserrat, sans-serif', 

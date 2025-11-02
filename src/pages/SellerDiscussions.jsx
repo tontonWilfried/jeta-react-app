@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, query, getDocs, doc, getDoc, orderBy } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
-import { FiMessageCircle, FiSearch, FiHeadphones } from 'react-icons/fi';
+import { FiMessageCircle, FiSearch, FiHeadphones, FiArrowLeft } from 'react-icons/fi';
 import DiscussionChat from './DiscussionChat';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useDiscussionSelection } from '../contexts/DiscussionSelectionContext';
 import { onSnapshot } from 'firebase/firestore';
 import ChatSupportClient from './ChatSupportClient';
@@ -21,6 +21,7 @@ const SellerDiscussions = () => {
   const [unreadCounts, setUnreadCounts] = useState({}); // { clientUid: count }
   const [lastMessages, setLastMessages] = useState({}); // { clientUid: { text, createdAt } }
   const { selectedDiscussionUid, setSelectedDiscussionUid } = useDiscussionSelection();
+  const navigate = useNavigate();
 
   // Charger la liste des clients du vendeur + infos messages
   useEffect(() => {
@@ -141,7 +142,15 @@ const SellerDiscussions = () => {
   );
 
   return (
-    <div className="min-h-screen bg-page-bg p-6 font-poppins">
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8">
         {/* Colonne gauche : liste clients + support */}
         <div className="bg-white rounded-2xl shadow p-4 flex flex-col border border-[#b3e0f7] max-w-xs w-full min-h-[60vh]">

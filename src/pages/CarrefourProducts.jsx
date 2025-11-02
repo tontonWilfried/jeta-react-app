@@ -5,6 +5,7 @@ import { useSellerCart } from '../contexts/SellerCartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
 import { FaShoppingCart } from 'react-icons/fa';
+import { FiArrowLeft } from 'react-icons/fi';
 
 // Import Google Fonts dynamiquement
 const fontLink = document.createElement('link');
@@ -183,12 +184,15 @@ export default function CarrefourProducts() {
   if (loading) return <div style={{ fontFamily: 'Montserrat, sans-serif', textAlign: 'center', color: '#003399' }}>Chargement...</div>;
 
   return (
-    <div style={{
-      padding: 24,
-      fontFamily: 'Montserrat, sans-serif',
-      background: '#f8fafc', 
-      minHeight: '100vh'
-    }}>
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       {/* Titre centré */}
       <h1 style={{ 
         fontFamily: 'Montserrat, sans-serif', 

@@ -105,7 +105,7 @@ const Header = ({ isConnected, userName, notificationCount }) => {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      navigate('/login'); // Rediriger vers la page de connexion après déconnexion
+      window.location.href = '/login'; // Force un reload complet pour éviter le retour sur une page protégée
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
     }
@@ -131,7 +131,7 @@ const Header = ({ isConnected, userName, notificationCount }) => {
           </Link>
 
           {/* Barre de recherche (affichée seulement pour vendeur ou client) */}
-          {(userRole === 'seller' || userRole === 'client') && (
+          {userRole !== 'admin' && (
             <form onSubmit={handleSearch} className="flex-1 max-w-lg mx-4 hidden md:flex" autoComplete="off">
               <div className="flex w-full bg-page-bg rounded-full shadow-sm border border-subtle-border focus-within:ring-2 focus-within:ring-primary/30 relative">
                 <input
@@ -198,9 +198,20 @@ const Header = ({ isConnected, userName, notificationCount }) => {
             {isConnected ? (
               <>
                 <Link to="/dashboard" className="flex items-center gap-1 text-primary font-semibold px-3 py-2 rounded-lg hover:bg-primary/10 transition text-base">
-                  <FiHome className="w-5 h-5" />
-                  <span className="hidden sm:inline">Tableau de bord</span>
+                  <FaTachometerAlt className="w-5 h-5" /> 
+                  {userRole === 'client' ? 'Accueil' : 'Tableau de bord'}
                 </Link>
+                {/* Affichage état connecté */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 border border-[#e3f3fa] shadow-sm">
+                  <span className="flex items-center gap-1 font-semibold text-[#1976d2]">
+                    <FaUserCircle className="w-5 h-5 text-[#4FC3F7]" />
+                    {userName || currentUser?.displayName || currentUser?.email || 'Utilisateur'}
+                  </span>
+                  <span className="ml-2 flex items-center gap-1">
+                    <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white shadow" title="Connecté"></span>
+                    <span className="text-xs text-green-600 font-bold">Connecté</span>
+                  </span>
+                </div>
                 <Link to="/profile" className="flex items-center gap-1 text-primary font-semibold px-3 py-2 rounded-lg hover:bg-primary/10 transition text-base">
                   <FiUser className="w-5 h-5" />
                   <span className="hidden sm:inline">Profil</span>

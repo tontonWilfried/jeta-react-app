@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { firestore, auth } from '../firebaseConfig';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { doc, getDoc, updateDoc, collection, query, where, getDocs, orderBy, deleteDoc } from 'firebase/firestore';
+import { updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider, deleteUser } from 'firebase/auth';
 import { toast } from 'react-toastify';
-import { FiUser, FiShoppingBag, FiHeart, FiEdit, FiSave, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiUser, FiShoppingBag, FiHeart, FiEdit, FiSave, FiX, FiEye, FiEyeOff, FiArrowLeft } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
   const { currentUser, userData } = useAuth();
@@ -27,6 +28,8 @@ const Profile = () => {
   const [orderSortOrder, setOrderSortOrder] = useState('desc');
   const [openOrders, setOpenOrders] = useState([]);
   const [userProfileData, setUserProfileData] = useState(null);
+  const navigate = useNavigate();
+  const [showDelete, setShowDelete] = useState(false);
 
   // Filtrage et tri JS des commandes (sur le premier produit de chaque commande)
   let filteredOrders = orders;
@@ -279,6 +282,23 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Cette action est irréversible.')) return;
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        // Supprimer les données Firestore associées
+        await deleteDoc(doc(firestore, 'users', user.uid));
+        // Supprimer le compte Auth
+        await deleteUser(user);
+        alert('Votre compte a été supprimé.');
+        window.location.href = '/';
+      }
+    } catch (e) {
+      alert("Erreur lors de la suppression du compte : " + (e.message || e));
+    }
+  };
+
   const getOrderStatusColor = (status) => {
     switch (status) {
       case 'paid': return 'bg-green-100 text-green-800';
@@ -298,7 +318,15 @@ const Profile = () => {
   };
 
   return (
-    <div className="bg-page-bg text-main min-h-screen">
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white shadow-xl rounded-lg overflow-hidden">
           {/* Header */}
@@ -671,6 +699,31 @@ const Profile = () => {
             )}
           </div>
         </div>
+        {showDelete && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Supprimer le compte</h3>
+              <p className="text-gray-700 mb-6">
+                Êtes-vous sûr de vouloir supprimer définitivement votre compte ? Cette action est irréversible.
+                Toutes vos données personnelles et vos commandes seront perdues.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDelete(false)}
+                  className="px-4 py-2 rounded-lg font-semibold shadow transition-colors duration-200 bg-gray-200 text-gray-800 hover:bg-gray-300"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  className="px-4 py-2 rounded-lg font-semibold shadow transition-colors duration-200 bg-red-500 text-white hover:bg-red-600"
+                >
+                  Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

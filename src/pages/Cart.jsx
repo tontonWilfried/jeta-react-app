@@ -1,12 +1,13 @@
 // src/pages/Cart.jsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { firestore } from '../firebaseConfig';
 import { collection, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { FaTrash, FaMinus, FaPlus, FaShoppingBag, FaCreditCard, FaMobileAlt, FaMoneyBillWave } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { FiArrowLeft } from 'react-icons/fi';
 
 // Couleurs Tailwind
 const OM_CLASS = 'text-orange-400';
@@ -32,6 +33,7 @@ const Cart = () => {
   const [deliveryType, setDeliveryType] = useState('delivery'); // 'delivery' ou 'pickup'
   const [selectedItems, setSelectedItems] = useState([]); // productId[]
   const [partialCheckoutLoading, setPartialCheckoutLoading] = useState(false);
+  const navigate = useNavigate();
 
   // Charger les données des produits
   useEffect(() => {
@@ -274,7 +276,15 @@ const Cart = () => {
   }
 
   return (
-    <div className="bg-page-bg text-main min-h-screen">
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white shadow-xl rounded-lg p-6 md:p-10">
           <h1 className="text-3xl md:text-4xl font-bold text-primary mb-6">

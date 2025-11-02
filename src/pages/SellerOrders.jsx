@@ -3,10 +3,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, increment, arrayUnion } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
 import { FaChevronDown } from 'react-icons/fa';
-import { FiShoppingBag, FiShoppingCart } from 'react-icons/fi';
+import { FiShoppingBag, FiShoppingCart, FiArrowLeft } from 'react-icons/fi';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import fr from 'date-fns/locale/fr';
 import 'react-datepicker/dist/react-datepicker.css';
+import { useNavigate } from 'react-router-dom';
 registerLocale('fr', fr);
 
 const statusLabels = {
@@ -35,11 +36,12 @@ export default function SellerOrders() {
   const [sellerNames, setSellerNames] = useState({});
   const [openDropdown, setOpenDropdown] = useState(null); // Pour custom dropdown
   const displayName = userData?.displayName || userData?.name || currentUser?.displayName || currentUser?.name || currentUser?.email || 'Vendeur';
+  const navigate = useNavigate();
 
   // Pagination pour commandes
   const ORDERS_PER_PAGE = 20;
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(null); // Changé de '' à null
   const COMMANDES_PAR_PAGE = 16;
 
   // Grouper les commandes par jour (doit être AVANT toute utilisation)
@@ -69,15 +71,17 @@ export default function SellerOrders() {
   }).filter(Boolean);
   const minDate = allOrderDates.length > 0 ? new Date(Math.min(...allOrderDates.map(d => d.getTime()))) : null;
   const maxDate = today;
-  // Pour react-datepicker, on convertit selectedDate en Date
-  const selectedDateObj = selectedDate ? new Date(selectedDate) : null;
-  // minDate = date de la première commande, maxDate = aujourd'hui
-  // On autorise la sélection de tous les jours entre ces deux bornes
+  
+  // Pour react-datepicker, on utilise directement selectedDate comme objet Date
+  // selectedDateObj n'est plus nécessaire car selectedDate sera maintenant un objet Date
 
   useEffect(() => {
     setCurrentPage(1); // Remettre à la page 1 quand on change de date
   }, [selectedDate]);
-  const commandesDuJour = commandesParJour[selectedDate] || [];
+  
+  // Convertir selectedDate (objet Date) en chaîne pour l'affichage et le filtrage
+  const selectedDateString = selectedDate ? selectedDate.toLocaleDateString() : '';
+  const commandesDuJour = commandesParJour[selectedDateString] || [];
   const totalPages = Math.ceil(commandesDuJour.length / COMMANDES_PAR_PAGE);
   const commandesPage = commandesDuJour.slice((currentPage - 1) * COMMANDES_PAR_PAGE, currentPage * COMMANDES_PAR_PAGE);
   const paginatedOrders = orders.slice((currentPage - 1) * ORDERS_PER_PAGE, currentPage * ORDERS_PER_PAGE);
@@ -104,7 +108,7 @@ export default function SellerOrders() {
                 orderId: docSnap.id,
                 orderNumber: order.orderNumber,
                 createdAt: order.createdAt,
-                status: order.status || order.paymentDetails?.status || 'pending',
+                status: item.status || order.status || order.paymentDetails?.status || 'pending',
                 buyerName,
                 buyerEmail,
                 buyerUid,
@@ -156,6 +160,7 @@ export default function SellerOrders() {
       const orderSnap = await getDoc(orderRef);
       if (!orderSnap.exists()) throw new Error('Commande introuvable');
       const orderData = orderSnap.data();
+      
       // Vérifier le stock si on passe à "Payée"
       if (newStatus === 'paid') {
         const productRef = doc(firestore, 'products', productId);
@@ -168,11 +173,13 @@ export default function SellerOrders() {
           setOpenDropdown(null);
           return;
         }
+        
         // Diminuer le stock
         await updateDoc(productRef, {
           stock: increment(-quantity)
         });
       }
+      
       // Si on repasse de 'paid' à 'cancelled', remettre le stock
       if (orderData.items) {
         const prevItem = orderData.items.find(item => item.productId === productId);
@@ -183,6 +190,7 @@ export default function SellerOrders() {
           });
         }
       }
+      
       // Mettre à jour le statut du bon item
       const newItems = (orderData.items || []).map(item =>
         item.productId === productId ? { ...item, status: newStatus } : item
@@ -231,12 +239,29 @@ export default function SellerOrders() {
 
   useEffect(() => {
     if (datesDisponibles.length > 0 && !selectedDate) {
-      setSelectedDate(datesDisponibles[0]);
+      // Vérifier que la première date est valide avant de la sélectionner
+      const firstDate = datesDisponibles[0];
+      if (firstDate && firstDate.trim()) {
+        // Convertir le format dd/MM/yyyy vers un objet Date
+        const [day, month, year] = firstDate.split('/');
+        const testDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        if (!isNaN(testDate.getTime())) {
+          setSelectedDate(testDate);
+        }
+      }
     }
   }, [datesDisponibles, selectedDate]);
 
   return (
-    <div className="min-h-screen bg-white text-text-main p-4">
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       <div className="flex flex-col items-center justify-center mb-10 animate-fadeInUp pt-8">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-dark drop-shadow-lg flex items-center gap-3 mb-2" style={{paddingBottom: '0.3em', marginBottom: '0.5em'}}>
           <span className="animate-bounce"><FiShoppingCart className="inline-block text-primary-dark" size={44} /></span>
@@ -258,8 +283,8 @@ export default function SellerOrders() {
               <label htmlFor="date-select" className="font-semibold text-primary">Choisir une date :</label>
               <DatePicker
                 id="date-select"
-                selected={selectedDateObj}
-                onChange={date => setSelectedDate(date ? date.toLocaleDateString() : '')}
+                selected={selectedDate}
+                onChange={date => setSelectedDate(date)}
                 minDate={minDate}
                 maxDate={maxDate}
                 locale="fr"
@@ -267,13 +292,13 @@ export default function SellerOrders() {
                 placeholderText="Sélectionner une date"
                 className="px-4 py-2 rounded-2xl border-2 border-primary bg-white text-primary font-semibold shadow focus:outline-none focus:ring-2 focus:ring-primary w-[220px] text-center"
                 calendarClassName="!border-primary !rounded-3xl !shadow-2xl !bg-[#f6fafd] !p-4 !mt-2 !border-2"
-                dayClassName={date => `!rounded-full !font-bold transition-all duration-150 ${selectedDateObj && date.toDateString() === selectedDateObj.toDateString() ? '!bg-[#4FC3F7] !text-white' : 'hover:!bg-[#4FC3F7]/20 hover:!text-[#4FC3F7]'}`}
+                dayClassName={date => `!rounded-full !font-bold transition-all duration-150 ${selectedDate && selectedDate instanceof Date && !isNaN(selectedDate.getTime()) && date.toDateString() === selectedDate.toDateString() ? '!bg-[#4FC3F7] !text-white' : 'hover:!bg-[#4FC3F7]/20 hover:!text-[#4FC3F7]'}`}
                 weekDayClassName={date => "!text-[#4FC3F7] !font-semibold"}
                 popperClassName="z-[9999]"
                 showMonthDropdown
                 showYearDropdown
                 dropdownMode="select"
-                openToDate={minDate}
+                openToDate={minDate && minDate instanceof Date && !isNaN(minDate.getTime()) ? minDate : undefined}
                 renderCustomHeader={({ date, decreaseMonth, increaseMonth, prevMonthButtonDisabled, nextMonthButtonDisabled }) => (
                   <div className="flex items-center justify-between mb-2 px-2">
                     <button onClick={decreaseMonth} disabled={prevMonthButtonDisabled} className="text-primary rounded-full px-2 py-1 hover:bg-primary/10 disabled:opacity-40">&lt;</button>
@@ -283,9 +308,9 @@ export default function SellerOrders() {
                 )}
               />
             </div>
-            {selectedDate && commandesParJour[selectedDate] && (
+            {selectedDate && commandesParJour[selectedDateString] && (
               <div className="mb-10">
-                <h2 className="text-xl font-bold text-primary mb-4">{selectedDate}</h2>
+                <h2 className="text-xl font-bold text-primary mb-4">{selectedDateString}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                   {commandesPage.map((order, idx) => (
                     <div key={order.orderId + '-' + idx} className="bg-[#f6fafd] rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col border-2 border-white">

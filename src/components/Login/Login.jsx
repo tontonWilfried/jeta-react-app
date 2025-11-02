@@ -19,6 +19,7 @@ const Login = () => {
   const [authMethod, setAuthMethod] = useState('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [code, setCode] = useState('');
   const [verificationCodeSent, setVerificationCodeSent] = useState(false);
   const [confirmationResultState, setConfirmationResultState] = useState(null);
@@ -72,7 +73,7 @@ const Login = () => {
   }, [auth, clearRecaptcha]);
 
   useEffect(() => {
-    if (authMethod === 'email') {
+    if (authMethod === 'phone') {
       if (recaptchaContainerRef.current && !recaptchaVerifierRef.current && !recaptchaLoading) {
         initializeRecaptcha();
       }
@@ -118,6 +119,38 @@ const Login = () => {
             break;
         }
         toast.error(errorMessage);
+      }
+    } else if (authMethod === 'phone') {
+      if (!verificationCodeSent) {
+        if (!recaptchaRendered || !recaptchaVerifierRef.current) {
+          toast.error('Veuillez compléter le reCAPTCHA.');
+          setIsSubmitting(false);
+          return;
+        }
+        try {
+          const fullPhoneNumber = `+237${phoneNumber}`;
+          const confirmation = await signInWithPhoneNumber(auth, fullPhoneNumber, recaptchaVerifierRef.current);
+          setConfirmationResultState(confirmation);
+          setVerificationCodeSent(true);
+          toast.success('SMS envoyé. Entrez le code.');
+        } catch (error) {
+          toast.error(error.message || "Erreur envoi SMS.");
+          clearRecaptcha();
+          setTimeout(() => initializeRecaptcha(), 100);
+        }
+      } else {
+        if (!confirmationResultState || !code) {
+            toast.error('Veuillez entrer le code de vérification.');
+            setIsSubmitting(false);
+            return;
+        }
+        try {
+            await confirmationResultState.confirm(code);
+            toast.success('Connexion par téléphone réussie !');
+            navigate('/dashboard');
+        } catch (error) {
+            toast.error(error.message || "Erreur vérification code.");
+        }
       }
     }
     setIsSubmitting(false);
@@ -169,6 +202,13 @@ const Login = () => {
               <span className="w-4 h-4 border border-gray-300 rounded-full flex items-center justify-center mr-2 peer-checked:border-primary"><span className={`w-2 h-2 bg-primary rounded-full ${authMethod !== 'email' ? 'opacity-0' : 'opacity-100'}`}></span></span>
               <span className="text-gray-700 peer-checked:text-primary">Email</span>
             </label>
+            {/*
+            <label className="inline-flex items-center cursor-pointer">
+              <input type="radio" name="authMethod" value="phone" checked={authMethod === 'phone'} onChange={() => handleAuthMethodChange('phone')} className="sr-only peer"/>
+              <span className="w-4 h-4 border border-gray-300 rounded-full flex items-center justify-center mr-2 peer-checked:border-primary"><span className={`w-2 h-2 bg-primary rounded-full ${authMethod !== 'phone' ? 'opacity-0' : 'opacity-100'}`}></span></span>
+              <span className="text-gray-700 peer-checked:text-primary">Téléphone</span>
+            </label>
+            */}
           </div>
 
           {authMethod === 'email' && (
@@ -178,12 +218,23 @@ const Login = () => {
             </>
           )}
 
-          {authMethod === 'email' && (
-            <button
-              type="submit"
-              disabled={isSubmitting || (authMethod === 'email' && (!recaptchaRendered || recaptchaLoading))}
+          {authMethod === 'phone' && !verificationCodeSent && (
+            <>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pr-2 border-r border-gray-300">+237</span>
+                <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0,9))} placeholder="Numéro (ex: 690536261)" className={`w-full p-3 pl-[70px] rounded-lg border ${recaptchaError ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors duration-300`} required disabled={isSubmitting} />
+              </div>
+              <div className="space-y-2">
+                <div ref={recaptchaContainerRef} id="recaptcha-container-login" className="min-h-[78px] flex justify-center items-center mt-4"></div>
+                {recaptchaLoading && <p className="text-sm text-gray-600">Chargement du reCAPTCHA...</p>} {/* Garder ce message pour le reCAPTCHA */}
+              </div>
+            </>
+          )}
+          
+          {!verificationCodeSent && (
+            <button type="submit" disabled={isSubmitting || (authMethod === 'phone' && (!recaptchaRendered || recaptchaLoading))}
               className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 ease-in-out ${
-                (isSubmitting || (authMethod === 'email' && (!recaptchaRendered || recaptchaLoading)))
+                (isSubmitting || (authMethod === 'phone' && (!recaptchaRendered || recaptchaLoading)))
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-primary text-white hover:bg-primary-dark hover:scale-[1.02] login-submit-button-step flex items-center justify-center' // Ajout de flex pour centrer le spinner
               }`}>
@@ -191,10 +242,25 @@ const Login = () => {
                 <span className="flex items-center justify-center">
                   <FaSpinner className="animate-spin mr-2 text-white" /> Chargement... {/* Couleur du spinner en blanc */}
                 </span>
-              ) : 'Se connecter'}
+              ) : (authMethod === 'phone' ? 'Envoyer le code SMS' : 'Se connecter')}
             </button>
           )}
         </form>
+
+        {verificationCodeSent && authMethod === 'phone' && (
+          <div className="mt-6 space-y-4">
+            <p className="text-sm text-gray-700">Un code de vérification a été envoyé au +237 {phoneNumber}.</p>
+            <input type="text" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0,6))} placeholder="Code à 6 chiffres" className="w-full p-3 rounded-lg border border-gray-300 text-center tracking-wider focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors duration-300" maxLength={6} inputMode="numeric" disabled={isSubmitting}/>
+            <button onClick={handleLogin} disabled={isSubmitting || code.length !== 6} className={`w-full px-4 py-3 rounded-lg font-semibold transition-all duration-200 ease-in-out ${(isSubmitting || code.length !== 6) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-primary text-white hover:bg-primary-dark hover:scale-[1.02]'}`}>
+              {isSubmitting ? (
+                <span className="flex items-center justify-center">
+                  <FaSpinner className="animate-spin mr-2 text-white" /> Vérification... {/* Couleur du spinner en blanc */}
+                </span>
+              ) : 'Vérifier et Se connecter'}
+            </button>
+             <button onClick={() => { setVerificationCodeSent(false); setCode(''); clearRecaptcha(); if (authMethod === 'phone') setTimeout(() => initializeRecaptcha(), 100);}} className="text-sm text-primary hover:underline mt-2" disabled={isSubmitting}>Renvoyer le code</button>
+          </div>
+        )}
 
         {authMethod === 'email' && (
           <button

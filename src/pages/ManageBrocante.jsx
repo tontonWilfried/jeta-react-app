@@ -6,7 +6,7 @@ import Modal from 'react-modal';
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import { FaEdit, FaTrashAlt, FaEye, FaEyeSlash, FaPlus, FaChartBar, FaShoppingBag } from 'react-icons/fa';
 import 'react-image-crop/dist/ReactCrop.css';
-import { FiEdit, FiTrash2, FiEye, FiShoppingBag, FiBox } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiEye, FiShoppingBag, FiBox, FiArrowLeft } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 Modal.setAppElement('#root');
@@ -731,77 +731,77 @@ const ManageBrocante = () => {
               </div>
             )}
           <h2 className="text-xl md:text-2xl font-semibold text-[#4FC3F7] mb-4 text-left">Mes produits en vente</h2>
-          {/* Filtres produits */}
-          <section className="mb-6 p-4 bg-[#f6fafd] rounded-2xl shadow-md border border-[#f3f6fa]">
-            <form className="flex flex-col sm:flex-row gap-4 mb-4">
-              <div className="flex-grow">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Rechercher par nom..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:border-[#4FC3F7] focus:ring-1 focus:ring-[#4FC3F7] transition-colors duration-300 pr-10"
-                  />
-                </div>
-              </div>
-              <button type="button" onClick={() => { setSearchTerm(''); setSelectedCategory(''); setMinPrice(''); setMaxPrice(''); setSelectedType(''); }} className="bg-[#e3f3fa] text-[#4FC3F7] px-6 py-3 rounded-lg font-semibold shadow hover:bg-[#b6e6fa] transition-colors duration-200">Effacer les filtres</button>
-            </form>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-2">
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
-                <select
-                  id="category"
-                  value={selectedCategory}
-                  onChange={e => setSelectedCategory(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200 appearance-none"
-                >
-                  <option value="">Toutes les catégories</option>
-                  {productCategories.filter(cat => !cat.disabled).map(cat => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                <select
-                  id="type"
-                  value={selectedType}
-                  onChange={e => setSelectedType(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200 appearance-none"
-                >
-                  <option value="">Tous les types</option>
-                  {productTypes.filter(type => !type.disabled).map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label htmlFor="minPrice" className="block text-sm font-medium text-gray-700 mb-1">Prix Min</label>
-                  <input
-                    type="number"
-                    id="minPrice"
-                    value={minPrice}
-                    onChange={e => setMinPrice(e.target.value)}
-                    placeholder="Min"
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="maxPrice" className="block text-sm font-medium text-gray-700 mb-1">Prix Max</label>
-                  <input
-                    type="number"
-                    id="maxPrice"
-                    value={maxPrice}
-                    onChange={e => setMaxPrice(e.target.value)}
-                    placeholder="Max"
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200"
-                  />
-                </div>
-              </div>
-            </div>
-          </section>
+          {/* Filtres produits version slim/soft/light */}
+          <div className="flex flex-wrap gap-3 mb-6 items-center justify-center bg-white/80 rounded-2xl shadow border border-[#e3f3fa] px-4 py-4">
+            <input
+              type="text"
+              placeholder="Rechercher par nom..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] shadow-sm placeholder:text-[#90caf9] transition-all"
+              style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711', maxWidth: 220}}
+            />
+            <select
+              value={selectedCategory}
+              onChange={e => setSelectedCategory(e.target.value)}
+              className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base text-[#0288D1] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] transition-all"
+              style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711'}}
+            >
+              <option value="">Toutes catégories</option>
+              {productCategories.filter(cat => !cat.disabled).map(cat => (
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              ))}
+            </select>
+            <select
+              value={selectedType}
+              onChange={e => setSelectedType(e.target.value)}
+              className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base text-[#0288D1] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] transition-all"
+              style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711'}}
+            >
+              <option value="">Tous les types</option>
+              {productTypes.filter(type => !type.disabled).map(type => (
+                <option key={type.value} value={type.value}>{type.label}</option>
+              ))}
+            </select>
+            <input
+              type="number"
+              id="minPrice"
+              value={minPrice}
+              onChange={e => setMinPrice(e.target.value)}
+              placeholder="Prix min"
+              className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] shadow-sm placeholder:text-[#90caf9] transition-all"
+              style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711', width: 160}}
+            />
+            <input
+              type="number"
+              id="maxPrice"
+              value={maxPrice}
+              onChange={e => setMaxPrice(e.target.value)}
+              placeholder="Prix max"
+              className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] shadow-sm placeholder:text-[#90caf9] transition-all"
+              style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711', width: 160}}
+            />
+            {/* Tri prix */}
+            <select
+              value={''}
+              onChange={e => {
+                if (e.target.value === 'asc') {
+                  setMinPrice(''); setMaxPrice('');
+                  setSellerProducts([...sellerProducts].sort((a, b) => a.price - b.price));
+                } else if (e.target.value === 'desc') {
+                  setMinPrice(''); setMaxPrice('');
+                  setSellerProducts([...sellerProducts].sort((a, b) => b.price - a.price));
+                }
+              }}
+              className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base text-[#0288D1] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] transition-all"
+              style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711'}}
+            >
+              <option value="">Trier par prix</option>
+              <option value="asc">Du moins cher au plus cher</option>
+              <option value="desc">Du plus cher au moins cher</option>
+            </select>
+            <button type="button" onClick={() => { setSearchTerm(''); setSelectedCategory(''); setMinPrice(''); setMaxPrice(''); setSelectedType(''); }} className="bg-[#e3f3fa] text-[#4FC3F7] px-6 py-2 rounded-full font-semibold shadow hover:bg-[#b6e6fa] transition-colors duration-200">Effacer</button>
+          </div>
             {isLoadingProducts && <p className="text-gray-500 text-left">Chargement de vos produits...</p>}
             {!isLoadingProducts && filteredProducts.length === 0 && (
               <p className="text-gray-500 text-left">Aucun produit correspondant aux filtres.</p>

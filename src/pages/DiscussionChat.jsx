@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, orderBy, addDoc, serverTimestamp, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, serverTimestamp, onSnapshot, doc, getDoc, setDoc } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
 import { FiSend } from 'react-icons/fi';
 import { toast } from 'react-toastify';
@@ -64,14 +64,29 @@ const DiscussionChat = ({ sellerUid, clientUid, isSeller }) => {
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim() || !chatId) return;
-    await addDoc(collection(firestore, 'clientSellerChats', chatId, 'messages'), {
-      text: input,
-      senderUid: currentUser.uid,
-      senderType,
-      createdAt: serverTimestamp(),
-      read: false,
-    });
-    setInput('');
+    
+    try {
+      // S'assurer que le document de chat parent existe
+      const chatDocRef = doc(firestore, 'clientSellerChats', chatId);
+      await setDoc(chatDocRef, {
+        createdAt: serverTimestamp(),
+        lastMessage: input,
+        lastMessageTime: serverTimestamp(),
+      }, { merge: true });
+      
+      // Ajouter le message
+      await addDoc(collection(firestore, 'clientSellerChats', chatId, 'messages'), {
+        text: input,
+        senderUid: currentUser.uid,
+        senderType,
+        createdAt: serverTimestamp(),
+        read: false,
+      });
+      
+      setInput('');
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi du message:', error);
+    }
   };
 
   // Marquer les messages comme lus seulement quand l'utilisateur les voit vraiment
@@ -84,14 +99,19 @@ const DiscussionChat = ({ sellerUid, clientUid, isSeller }) => {
     );
     
     if (unreadMessages.length > 0) {
-      // Marquer comme lu seulement quand l'utilisateur est actuellement dans cette discussion
-      // Pas de délai automatique - seulement quand l'utilisateur est présent
+      // Ajouter un délai pour s'assurer que l'utilisateur a vraiment vu les messages
+      const timer = setTimeout(() => {
         unreadMessages.forEach(msg => {
           const msgRef = doc(firestore, 'clientSellerChats', chatId, 'messages', msg.id);
           import('firebase/firestore').then(({ updateDoc }) => {
-            updateDoc(msgRef, { read: true });
+            updateDoc(msgRef, { read: true }).catch(error => {
+              console.error('Erreur lors du marquage comme lu:', error);
+            });
           });
         });
+      }, 2000); // Délai de 2 secondes pour s'assurer que l'utilisateur a vu les messages
+      
+      return () => clearTimeout(timer);
     }
   }, [chatId, currentUser, messages]);
 

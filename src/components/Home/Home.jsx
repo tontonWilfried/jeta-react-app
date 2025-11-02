@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom';
 import './Home.css'; // Pour l'effet machine à écrire
 // CustomJoyrideTooltip est maintenant utilisé globalement dans App.tsx
 
-const Home = ({ startOnboardingTour }) => {
+const Home = () => {
   // La logique du tutoriel est maintenant gérée par App.tsx
-  // startOnboardingTour est une prop venant de App.tsx
 
   return (
     <>
@@ -45,12 +44,14 @@ const Home = ({ startOnboardingTour }) => {
               >
                 COMMENCER
               </Link>
+              {/*
               <button 
                 onClick={startOnboardingTour}
                 className="flex-1 bg-primary hover:bg-primary-dark text-white px-4 py-3 rounded-lg font-semibold shadow-md transform hover:scale-105 transition-all duration-200 flex items-center justify-center"
               >
                 Lancer le Tutoriel
               </button>
+              */}
             </div>
           </div>
         </div>

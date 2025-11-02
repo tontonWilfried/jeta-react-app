@@ -51,7 +51,7 @@ export default function SellerDashboard() {
                 orderId: orderDoc.id,
                 orderNumber: order.orderNumber,
                 createdAt: order.createdAt,
-                status: order.status || order.paymentDetails?.status || '',
+                status: item.status || order.status || order.paymentDetails?.status || '',
                 buyerEmail: order.buyerEmail,
                 buyerUid: order.buyerUid,
                 buyernum: order.buyernum,

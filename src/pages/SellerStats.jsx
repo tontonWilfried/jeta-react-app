@@ -5,6 +5,8 @@ import { firestore } from '../firebaseConfig';
 import { FaChartBar, FaShoppingBag, FaMoneyBillWave, FaBoxOpen } from 'react-icons/fa';
 import { FiTrendingUp } from 'react-icons/fi';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { useNavigate } from 'react-router-dom';
+import { FiArrowLeft } from 'react-icons/fi';
 
 export default function SellerStats() {
   const { currentUser } = useAuth();
@@ -13,6 +15,7 @@ export default function SellerStats() {
   const [monthlySales, setMonthlySales] = useState([]); // [{month, ventes, ca}]
   const [stockHistory, setStockHistory] = useState([]); // [{date, stockFaible}]
   const [advice, setAdvice] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -39,7 +42,7 @@ export default function SellerStats() {
                 orderId: orderDoc.id,
                 orderNumber: order.orderNumber,
                 createdAt: order.createdAt,
-                status: order.status || order.paymentDetails?.status || '',
+                status: item.status || order.status || order.paymentDetails?.status || '',
                 buyerEmail: order.buyerEmail,
                 buyerUid: order.buyerUid,
                 buyernum: order.buyernum,
@@ -99,7 +102,15 @@ export default function SellerStats() {
   }, [currentUser]);
 
   return (
-    <div className="min-h-screen bg-[#f6fafd] py-10 px-2 sm:px-6">
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-col items-center justify-center mb-10 animate-fadeInUp">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#4FC3F7] mb-2 flex items-center gap-3">

@@ -6,6 +6,8 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { FiTrendingUp } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const BrocanteLive = () => {
   const { currentUser } = useAuth();
@@ -83,7 +85,11 @@ const BrocanteLive = () => {
 
     // 2. Determine the single range filter
     if (searchTerm && (minPrice || maxPrice)) {
-      toast.warn("La recherche par nom et le filtrage par prix ne peuvent pas être combinés. Le filtre par prix sera ignoré.");
+      let alreadyWarnedNameAndPrice = false;
+      if (searchTerm && (minPrice || maxPrice) && !alreadyWarnedNameAndPrice) {
+        toast.warn("La recherche par nom et le filtrage par prix ne peuvent pas être combinés. Le filtre par prix sera ignoré.");
+        alreadyWarnedNameAndPrice = true;
+      }
     } else if (minPrice || maxPrice) {
       if (minPrice) {
         queryConstraints.push(where('price', '>=', parseFloat(minPrice)));
@@ -120,6 +126,7 @@ const BrocanteLive = () => {
     let docsToSkip = (page - 1) * PRODUCTS_PER_PAGE;
     let lastVisible = null;
     let allDocs = [];
+    let alreadyNotifiedNoResult = false;
     try {
       // Get all docs up to the current page (inefficient for large collections, but works for now)
       const querySnapshot = await getDocs(productsQuery);
@@ -162,8 +169,13 @@ const BrocanteLive = () => {
       setProducts(newProducts);
       setHasMore((docsToSkip + PRODUCTS_PER_PAGE) < filteredDocs.length);
       setTotalProducts(filteredDocs.length);
-      if (newProducts.length === 0) {
-        toast.info("Aucun produit ne correspond à vos critères de recherche.");
+      // Afficher le toast 'Aucun produit...' seulement si ce n'est pas déjà affiché pour cette recherche
+      if (newProducts.length === 0 && !alreadyNotifiedNoResult) {
+        alreadyNotifiedNoResult = true;
+        // Afficher le message dans la page, pas en toast
+        // toast.info("Aucun produit ne correspond à vos critères de recherche.");
+      } else if (newProducts.length > 0) {
+        alreadyNotifiedNoResult = false;
       }
       if (!setHasMore && page > 1) {
         toast.info("Tous les produits sont déjà affichés.");
@@ -397,198 +409,109 @@ const BrocanteLive = () => {
     return count;
   };
 
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen bg-white text-text-main p-4">
-      <div className="flex flex-col items-center justify-center mb-10 animate-fadeInUp pt-8">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary-dark drop-shadow-lg flex items-center gap-3 mb-2" style={{paddingBottom: '0.3em', marginBottom: '0.5em'}}>
-          <span className="animate-bounce"><FiTrendingUp className="inline-block text-primary-dark" size={44} /></span>
-          Brocante Live
-        </h1>
-        <p className="text-lg sm:text-xl text-text-secondary font-medium text-center max-w-2xl">
-          Découvrez les meilleures trouvailles de la communauté en temps réel !
-        </p>
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
+      {/* Filtres slim et soft */}
+      <div className="flex flex-wrap gap-3 mb-6 items-center justify-center mt-16">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          placeholder="Rechercher..."
+          className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] shadow-sm placeholder:text-[#90caf9] transition-all"
+          style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711', maxWidth: 220}}
+        />
+        <select
+          value={selectedCategory}
+          onChange={e => setSelectedCategory(e.target.value)}
+          className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base text-[#0288D1] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] transition-all"
+          style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711'}}
+        >
+          {productCategories.filter((cat, idx, arr) => arr.findIndex(c => c.value === cat.value) === idx).map(cat => (
+            <option key={cat.value} value={cat.value}>{cat.label}</option>
+          ))}
+        </select>
+        <input
+          type="number"
+          value={minPrice}
+          onChange={e => setMinPrice(e.target.value)}
+          placeholder="Prix min"
+          className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] shadow-sm placeholder:text-[#90caf9] transition-all"
+          style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711', width: 160}}
+        />
+        <input
+          type="number"
+          value={maxPrice}
+          onChange={e => setMaxPrice(e.target.value)}
+          placeholder="Prix max"
+          className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] shadow-sm placeholder:text-[#90caf9] transition-all"
+          style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711', width: 160}}
+        />
+        <select
+          value={productCondition}
+          onChange={e => setProductCondition(e.target.value)}
+          className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base text-[#0288D1] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] transition-all"
+          style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711'}}
+        >
+          {productConditions.filter((cond, idx, arr) => arr.findIndex(c => c.value === cond.value) === idx).map(cond => (
+            <option key={cond.value} value={cond.value}>{cond.label}</option>
+          ))}
+        </select>
+        {/* Filtre de tri par prix */}
+        <select
+          value={sortBy === 'price' ? sortOrder : ''}
+          onChange={e => {
+            if (e.target.value === 'asc') {
+              setSortBy('price');
+              setSortOrder('asc');
+            } else if (e.target.value === 'desc') {
+              setSortBy('price');
+              setSortOrder('desc');
+            } else {
+              setSortBy('createdAt');
+              setSortOrder('desc');
+            }
+          }}
+          className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base text-[#0288D1] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] transition-all"
+          style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711'}}
+        >
+          <option value="">Trier par prix</option>
+          <option value="asc">Du moins cher au plus cher</option>
+          <option value="desc">Du plus cher au moins cher</option>
+        </select>
+        <select
+          value={selectedCity}
+          onChange={e => setSelectedCity(e.target.value)}
+          className="px-3 py-2 rounded-full border border-[#b3e5fc] bg-white text-base text-[#0288D1] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] transition-all"
+          style={{fontWeight: 500, minWidth: 0, boxShadow: '0 1px 6px #4FC3F711'}}
+        >
+          <option value="">Toutes les villes</option>
+          {CITIES.map(city => (
+            <option key={city} value={city}>{city}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={handleClearFilters}
+          className="bg-[#e3f3fa] text-[#4FC3F7] px-6 py-2 rounded-full font-semibold shadow hover:bg-[#b6e6fa] transition-colors duration-200"
+        >
+          Effacer
+        </button>
       </div>
+      {/* SUPPRESSION DU FILTRE MODERNE (carte sticky) */}
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Search and Filter Section */}
-        <section className="mb-8 p-6 bg-[#f6fafd] rounded-2xl shadow-xl border border-[#e3f1fa] sticky top-0 z-20">
-          <form onSubmit={handleSearchSubmit} className="flex flex-col gap-4">
-            {/* Groupe principal : Recherche + Filtres principaux */}
-            <fieldset className="border-0 p-0 m-0">
-              <legend className="sr-only">Recherche et filtres principaux</legend>
-              <div className="flex flex-col md:flex-row md:items-end gap-3 md:gap-4">
-                {/* Barre de recherche */}
-                <div className="flex-1 relative">
-                  <label htmlFor="search" className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                    <FaSearch className="text-primary" /> Recherche
-                  </label>
-                  <input
-                    id="search"
-                    type="text"
-                    placeholder="Rechercher un produit, une marque, une catégorie..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-gray-300 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary transition-colors duration-300 pr-10 text-sm shadow-sm"
-                    aria-label="Recherche de produits"
-                  />
-                  <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary-dark" aria-label="Lancer la recherche">
-                    <FaSearch />
-                  </button>
-                </div>
-                <button type="submit" className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-lg font-bold shadow hover:bg-primary-dark transition-colors duration-200 text-base min-w-[120px] justify-center">
-                  <FaFilter /> Rechercher
-                </button>
-              </div>
-              {/* Filtres principaux */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-                <div>
-                  <label htmlFor="category" className="block text-sm font-bold text-gray-700 mb-1 flex items-center gap-2">
-                    <FaTag className="text-primary" /> Catégorie
-                    {selectedCategory && <span className="ml-2 bg-primary text-white rounded-full px-2 py-0.5 text-xs font-semibold">1</span>}
-                  </label>
-                  <select
-                    id="category"
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className={`w-full px-3 py-2.5 rounded-lg border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200 appearance-none custom-select shadow-sm ${selectedCategory ? 'ring-2 ring-primary' : ''}`}
-                    aria-label="Filtrer par catégorie"
-                  >
-                    {productCategories.map(cat => (
-                      <option key={cat.value} value={cat.value}>{cat.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="condition" className="block text-sm font-bold text-gray-700 mb-1 flex items-center gap-2">
-                    <FaDollarSign className="text-primary" /> État
-                    {productCondition && <span className="ml-2 bg-primary text-white rounded-full px-2 py-0.5 text-xs font-semibold">1</span>}
-                  </label>
-                  <select
-                    id="condition"
-                    value={productCondition}
-                    onChange={(e) => setProductCondition(e.target.value)}
-                    className={`w-full px-3 py-2.5 rounded-lg border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200 appearance-none custom-select shadow-sm ${productCondition ? 'ring-2 ring-primary' : ''}`}
-                    aria-label="Filtrer par état"
-                  >
-                    {productConditions.map(cond => (
-                      <option key={cond.value} value={cond.value}>{cond.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="city" className="block text-sm font-bold text-gray-700 mb-1 flex items-center gap-2">
-                    <FaMapMarkerAlt className="text-primary" /> Ville
-                    {selectedCity && <span className="ml-2 bg-primary text-white rounded-full px-2 py-0.5 text-xs font-semibold">1</span>}
-                  </label>
-                  <select
-                    id="city"
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
-                    className={`w-full px-3 py-2.5 rounded-lg border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200 appearance-none custom-select shadow-sm ${selectedCity ? 'ring-2 ring-primary' : ''}`}
-                    aria-label="Filtrer par ville"
-                  >
-                    <option value="">Toutes les villes</option>
-                    {CITIES.map(city => (
-                      <option key={city} value={city}>{city}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </fieldset>
-
-            {/* Séparateur visuel */}
-            <div className="my-4 border-t border-[#e3f1fa]" aria-hidden="true"></div>
-
-            {/* Groupe secondaire : Prix + Tri */}
-            <fieldset className="border-0 p-0 m-0">
-              <legend className="sr-only">Filtres secondaires</legend>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-end">
-                {/* Groupe prix */}
-                <div className="flex flex-col gap-1">
-                  <span className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                    <FaDollarSign className="text-primary" /> Prix
-                    {(minPrice || maxPrice) && <span className="ml-2 bg-primary text-white rounded-full px-2 py-0.5 text-xs font-semibold">{[minPrice,maxPrice].filter(Boolean).length}</span>}
-                  </span>
-                  <div className="flex gap-2">
-                    <input
-                      type="number"
-                      id="minPrice"
-                      value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)}
-                      placeholder="Prix minimum"
-                      className="w-1/2 px-3 py-2.5 rounded-lg border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200 shadow-sm text-sm"
-                      aria-label="Prix minimum"
-                    />
-                    <input
-                      type="number"
-                      id="maxPrice"
-                      value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)}
-                      placeholder="Prix maximum"
-                      className="w-1/2 px-3 py-2.5 rounded-lg border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200 shadow-sm text-sm"
-                      aria-label="Prix maximum"
-                    />
-                  </div>
-                </div>
-                {/* Tri */}
-                <div className="flex flex-col gap-1">
-                  <span className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                    <FaSort className="text-primary" /> Tri
-                    {(sortBy !== 'createdAt' || sortOrder !== 'desc') && <span className="ml-2 bg-primary text-white rounded-full px-2 py-0.5 text-xs font-semibold">1</span>}
-                  </span>
-                  <div className="flex gap-2">
-                    <select
-                      id="sortBy"
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className={`w-1/2 px-3 py-2.5 rounded-lg border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200 appearance-none custom-select shadow-sm text-sm ${sortBy !== 'createdAt' ? 'ring-2 ring-primary' : ''}`}
-                      aria-label="Trier par"
-                    >
-                      <option value="createdAt">Date d'ajout</option>
-                      <option value="price">Prix</option>
-                    </select>
-                    <select
-                      id="sortOrder"
-                      value={sortOrder}
-                      onChange={(e) => setSortOrder(e.target.value)}
-                      className={`w-1/2 px-3 py-2.5 rounded-lg border-2 border-white bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-[#4FC3F7] focus:border-[#4FC3F7] transition duration-200 appearance-none custom-select shadow-sm text-sm ${sortOrder !== 'desc' ? 'ring-2 ring-primary' : ''}`}
-                      aria-label="Ordre de tri"
-                    >
-                      <option value="desc">Décroissant</option>
-                      <option value="asc">Croissant</option>
-                    </select>
-                  </div>
-                </div>
-                {/* Effacer les filtres */}
-                <div className="flex flex-col gap-1 items-end justify-end">
-                  <button
-                    type="button"
-                    onClick={handleClearFilters}
-                    className="flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2.5 rounded-lg font-bold shadow hover:bg-red-200 transition-colors duration-200 w-full sm:w-auto text-sm"
-                    aria-label="Effacer tous les filtres"
-                  >
-                    <FaTimesCircle className="text-red-500" /> Effacer les filtres
-                    {getActiveFiltersCount() > 0 && (
-                      <span className="ml-2 bg-red-500 text-white rounded-full px-2 py-0.5 text-xs font-semibold">{getActiveFiltersCount()}</span>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </fieldset>
-          </form>
-          {/* Feedback utilisateur : nombre de résultats */}
-          <div className="mt-6 flex items-center gap-3 text-gray-700 text-base font-semibold">
-            {loading ? (
-              <FaSpinner className="animate-spin text-primary mr-2" />
-            ) : (
-              <span>{totalProducts} résultat{totalProducts > 1 ? 's' : ''} trouvé{totalProducts > 1 ? 's' : ''}</span>
-            )}
-            {getActiveFiltersCount() > 0 && (
-              <span className="ml-2 bg-primary text-white rounded-full px-3 py-1 text-xs font-semibold">{getActiveFiltersCount()} filtre{getActiveFiltersCount() > 1 ? 's' : ''} actif{getActiveFiltersCount() > 1 ? 's' : ''}</span>
-            )}
-          </div>
-        </section>
-
-          {/* Product Listing Section */}
+        {/* SUPPRESSION DU FILTRE MODERNE (carte sticky) */}
+        {/* Product Listing Section */}
           <section>
             {error && <p className="text-red-600 text-center mb-4">{error}</p>}
             
@@ -610,8 +533,8 @@ const BrocanteLive = () => {
               </div>
             )}
 
-            {!loading && products.length === 0 && (
-              <p className="text-gray-500 text-center text-lg">Aucun produit disponible pour le moment ou ne correspond à votre recherche.</p>
+            {!loading && products.length === 0 && !error && (
+              <div className="text-center text-gray-500 text-lg my-8">Aucun produit ne correspond à vos critères de recherche.</div>
             )}
 
             {products.length > 0 && (

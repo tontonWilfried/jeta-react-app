@@ -84,6 +84,14 @@ export default function GlobalChatListener() {
             lastMsg.createdAt.toDate &&
             lastMsg.createdAt.toDate().getTime() > connectionTimestamp.current
           ) {
+            console.log('[DEBUG][GlobalChatListener] Nouveau message non lu détecté:', {
+              chatId,
+              messageId: lastMsg.id,
+              senderUid: lastMsg.senderUid,
+              text: lastMsg.text,
+              read: lastMsg.read
+            });
+            
             let senderName = 'Utilisateur';
             try {
               const userDoc = await getDoc(doc(firestore, 'users', lastMsg.senderUid));
@@ -91,11 +99,22 @@ export default function GlobalChatListener() {
                 senderName = userDoc.data().displayName || userDoc.data().name || userDoc.data().email || 'Utilisateur';
               }
             } catch {}
+            
+            console.log('[DEBUG][GlobalChatListener] Toast désactivé pour:', senderName);
+            
+            // Toasts désactivés comme demandé par l'utilisateur
             // toast.info(`${senderName} vous a envoyé un message`, {
             //   icon: '💬',
             //   toastId: `msg-${chatId}-${lastMsg.id}`,
-            //   onClick: () => navigateToDiscussion(chatId)
+            //   onClick: () => navigateToDiscussion(chatId),
+            //   position: 'top-right',
+            //   autoClose: 5000,
+            //   hideProgressBar: false,
+            //   closeOnClick: true,
+            //   pauseOnHover: true,
+            //   draggable: true,
             // });
+            
             lastNotifiedMsgIds.current[chatId] = lastMsg.id;
           }
         });

@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { firestore } from '../firebaseConfig';
+import { useNavigate } from 'react-router-dom';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const BARREME = 1000; // 1 point par 1000 FCFA
 const REDUCTION = 5; // 5% pour 100 points (exemple)
@@ -13,6 +15,7 @@ const LoyaltyProgram = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false); // Pour afficher tout l'historique ou non
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPoints = async () => {
@@ -34,7 +37,15 @@ const LoyaltyProgram = () => {
   const hasMore = history.length > 2;
 
   return (
-    <div className="bg-page-bg text-main min-h-screen">
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white shadow-xl rounded-lg p-6 md:p-10 max-w-2xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-extrabold text-[#4FC3F7] mb-6 text-center">

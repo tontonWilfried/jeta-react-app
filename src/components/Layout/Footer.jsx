@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FaWhatsapp, FaFacebook, FaEnvelope } from 'react-icons/fa';
 // import { FaWhatsapp, FaFacebook, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
 
 const Footer = () => {
@@ -28,17 +29,17 @@ const Footer = () => {
               {/* <a href="URL_GOOGLE_MAPS" target="_blank" rel="noopener noreferrer" className="hover:underline ml-1">(Voir la carte)</a> */}
             </p>
             <div className="flex justify-center space-x-4">
-              <a href="https://wa.me/VOTRE_NUMERO_WHATSAPP" target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+              <a href="" target="_blank" rel="noopener noreferrer" className="hover:text-primary">
                 {/* <FaWhatsapp size={24} /> */}
-                <span>WA</span>
+                <FaWhatsapp size={24} />
               </a>
-              <a href="URL_PAGE_FACEBOOK" target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+              <a href="" target="_blank" rel="noopener noreferrer" className="hover:text-primary">
                 {/* <FaFacebook size={24} /> */}
-                <span>FB</span>
+                <FaFacebook size={24} />
               </a>
-              <a href="sms:VOTRE_NUMERO_SMS" className="hover:text-primary">
+              <a href="" className="hover:text-primary">
                 {/* <FaEnvelope size={24} /> Ou une icône SMS */}
-                <span>SMS</span>
+                <FaEnvelope size={24} />
               </a>
             </div>
           </div>
@@ -53,6 +54,10 @@ const Footer = () => {
         </div>
         <div className="border-t border-subtle-border pt-6">
           <p className="text-sm">&copy; {currentYear} JETA - Tous droits réservés.</p>
+          <div className="text-center text-xs text-gray-500 mt-2">
+            © {new Date().getFullYear()} Jeta. Tous droits réservés. |
+            <a href="/politique-confidentialite" className="text-accent-green underline ml-1">Politique de confidentialité</a>
+          </div>
         </div>
       </div>
     </footer>

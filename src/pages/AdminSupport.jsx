@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { firestore } from '../firebaseConfig';
 import { collection, getDocs, query, orderBy, addDoc, serverTimestamp, doc, getDoc, onSnapshot, where, updateDoc } from 'firebase/firestore';
-import { FiMessageCircle, FiSearch, FiHeadphones, FiFilter, FiUser, FiClock, FiMoreHorizontal, FiX, FiSend, FiCheck } from 'react-icons/fi';
+import { FiMessageCircle, FiSearch, FiHeadphones, FiFilter, FiUser, FiClock, FiMoreHorizontal, FiX, FiSend, FiCheck, FiArrowLeft } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function AdminSupport() {
   const { currentUser } = useAuth();
@@ -17,6 +18,7 @@ export default function AdminSupport() {
   const listenersReadyRef = useRef({});
   const inputRef = useRef(null); // Ref for the input field
   const [isTyping, setIsTyping] = useState(false); // State for typing indicator
+  const navigate = useNavigate();
 
   // Listener temps réel sur tous les fils support pour les badges non lus et tri dynamique
   useEffect(() => {
@@ -166,7 +168,15 @@ export default function AdminSupport() {
   const selectedChatObj = users.find(c => c.userId === selectedChat);
 
   return (
-    <div className="min-h-screen bg-page-bg p-4 font-poppins">
+    <div className="min-h-screen bg-[#f6fafd] py-8 px-4 relative">
+      {/* Bouton retour */}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-white/80 hover:bg-[#e3f3fa] shadow text-[#4FC3F7] font-semibold text-base z-30 border border-[#e3f3fa]"
+        style={{backdropFilter: 'blur(2px)'}}
+      >
+        <FiArrowLeft className="w-5 h-5" /> Retour
+      </button>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-3xl shadow-xl p-8 mb-8 border border-primary/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
